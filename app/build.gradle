@@ -98,4 +98,7 @@ dependencies {
 
     implementation 'android.arch.lifecycle:extensions:1.1.1'
 
+    implementation 'org.osmdroid:osmdroid-android:6.1.16'
+
+
 }
