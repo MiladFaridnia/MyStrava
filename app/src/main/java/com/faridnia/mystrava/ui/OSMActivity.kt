@@ -1,9 +1,10 @@
-package com.faridnia.mystrava
+package com.faridnia.mystrava.ui
 
 import android.os.Bundle
 import android.preference.PreferenceManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.faridnia.mystrava.R
 import org.osmdroid.api.IMapController
 import org.osmdroid.config.Configuration.getInstance
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -32,7 +33,7 @@ class OSMActivity : AppCompatActivity() {
         //tile servers will get you banned based on this string.
 
         //inflate and create the map
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_osm)
 
 
         //load/initialize the osmdroid configuration, this can be done
