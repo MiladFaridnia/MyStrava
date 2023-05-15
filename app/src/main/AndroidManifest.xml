@@ -22,7 +22,7 @@
         android:theme="@style/Theme.MyStrava"
         tools:targetApi="31">
         <activity
-            android:name=".OSMActivity"
+            android:name=".ui.OSMActivity"
             android:exported="true"
             android:launchMode="singleTask">
             <intent-filter>
