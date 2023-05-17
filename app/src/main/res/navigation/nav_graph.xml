@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/setupFragment">
+
+    <fragment
+        android:id="@+id/setupFragment"
+        android:name="com.faridnia.mystrava.ui.fragments.SetupFragment"
+        android:label="SetupFragment" />
+    <fragment
+        android:id="@+id/runFragment"
+        android:name="com.faridnia.mystrava.ui.fragments.RunFragment"
+        android:label="RunFragment" />
+    <fragment
+        android:id="@+id/settingFragment"
+        android:name="com.faridnia.mystrava.ui.fragments.SettingFragment"
+        android:label="SettingFragment" />
+    <fragment
+        android:id="@+id/statisticsFragment"
+        android:name="com.faridnia.mystrava.ui.fragments.StatisticsFragment"
+        android:label="StatisticsFragment" />
+    <fragment
+        android:id="@+id/trackingFragment"
+        android:name="com.faridnia.mystrava.ui.fragments.TrackingFragment"
+        android:label="TrackingFragment" />
+</navigation>
