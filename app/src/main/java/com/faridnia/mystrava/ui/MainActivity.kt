@@ -1,21 +1,39 @@
 package com.faridnia.mystrava.ui
 
-import android.content.Context
-import android.util.AttributeSet
+import android.os.Bundle
+import android.os.PersistableBundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.findNavController
+import androidx.navigation.ui.setupWithNavController
 import com.faridnia.mystrava.R
+import com.faridnia.mystrava.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityMainBinding
+    override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
+        super.onCreate(savedInstanceState, persistentState)
 
-    override fun onCreateView(name: String, context: Context, attrs: AttributeSet): View? {
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
 
+        setContentView(binding.rootView)
 
-        return super.onCreateView(name, context, attrs)
+        setSupportActionBar(binding.toolbar)
 
+        val navController = findNavController(R.id.navHostFragment)
+
+        binding.bottomNavigationView.setupWithNavController(navController)
+
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                R.id.settingFragment, R.id.runFragment, R.id.statisticsFragment ->
+                    binding.bottomNavigationView.visibility = View.VISIBLE
+                else ->
+                    binding.bottomNavigationView.visibility = View.GONE
+            }
+        }
     }
 }
