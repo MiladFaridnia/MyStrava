@@ -7,19 +7,27 @@
     <fragment
         android:id="@+id/setupFragment"
         android:name="com.faridnia.mystrava.ui.fragments.SetupFragment"
-        android:label="SetupFragment" />
+        android:label="SetupFragment" >
+        <action
+            android:id="@+id/actionSetupFragmentToRunFragment"
+            app:destination="@id/runFragment" />
+    </fragment>
+
     <fragment
         android:id="@+id/runFragment"
         android:name="com.faridnia.mystrava.ui.fragments.RunFragment"
         android:label="RunFragment" />
+
     <fragment
         android:id="@+id/settingFragment"
         android:name="com.faridnia.mystrava.ui.fragments.SettingFragment"
         android:label="SettingFragment" />
+
     <fragment
         android:id="@+id/statisticsFragment"
         android:name="com.faridnia.mystrava.ui.fragments.StatisticsFragment"
         android:label="StatisticsFragment" />
+
     <fragment
         android:id="@+id/trackingFragment"
         android:name="com.faridnia.mystrava.ui.fragments.TrackingFragment"
