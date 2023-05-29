@@ -41,6 +41,10 @@ android {
         viewBinding true
         dataBinding true
     }
+
+    lintOptions {
+        lintConfig = file("$rootDir/ignore_glide_permission_error.xml")
+    }
 }
 
 dependencies {
