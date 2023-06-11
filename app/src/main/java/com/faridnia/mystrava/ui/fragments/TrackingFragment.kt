@@ -1,15 +1,24 @@
 package com.faridnia.mystrava.ui.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import com.faridnia.mystrava.R
 import com.faridnia.mystrava.databinding.FragmentTrackingBinding
+import com.faridnia.mystrava.other.Constants.ACTION_START_OR_RESUME_SERVICE
+import com.faridnia.mystrava.service.TrackingService
+import com.faridnia.mystrava.ui.viewmodels.MainViewModel
 import com.google.android.gms.maps.GoogleMap
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class TrackingFragment : Fragment(R.layout.fragment_tracking) {
+
+    private val viewModel: MainViewModel by viewModels()
 
     private var _binding: FragmentTrackingBinding? = null
     private val binding get() = _binding!!
@@ -17,9 +26,7 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
     var map: GoogleMap? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
 
         _binding = FragmentTrackingBinding.inflate(layoutInflater, container, false)
@@ -32,9 +39,21 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
 
         binding.mapView.onCreate(savedInstanceState)
 
+        binding.btnToggleRun.setOnClickListener {
+            sentCommandToService(ACTION_START_OR_RESUME_SERVICE)
+        }
+
+
         binding.mapView.getMapAsync {
 
             map = it
+        }
+    }
+
+    private fun sentCommandToService(command: String) {
+        Intent(requireContext(), TrackingService::class.java).also {
+            it.action = command
+            requireContext().startService(it)
         }
     }
 
