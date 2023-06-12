@@ -23,7 +23,7 @@
     </fragment>
 
     <fragment
-        android:id="@+id/settingFragment"
+        android:id="@+id/settingsFragment"
         android:name="com.faridnia.mystrava.ui.fragments.SettingFragment"
         android:label="SettingFragment" />
 
