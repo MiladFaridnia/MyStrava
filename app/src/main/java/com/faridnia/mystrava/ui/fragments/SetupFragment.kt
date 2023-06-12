@@ -23,11 +23,11 @@ class SetupFragment : Fragment(R.layout.fragment_setup) {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
 
-        _binding = FragmentSetupBinding.inflate(layoutInflater, container, false)
+        _binding = FragmentSetupBinding.inflate(inflater, container, false)
 
-        return super.onCreateView(inflater, container, savedInstanceState)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

@@ -18,7 +18,7 @@
         android:name="com.faridnia.mystrava.ui.fragments.RunFragment"
         android:label="RunFragment" >
         <action
-            android:id="@+id/action_runFragment_to_trackingFragment"
+            android:id="@+id/actionRunFragmentToTrackingFragment"
             app:destination="@id/trackingFragment" />
     </fragment>
 
@@ -37,7 +37,7 @@
         android:name="com.faridnia.mystrava.ui.fragments.TrackingFragment"
         android:label="TrackingFragment" >
         <action
-            android:id="@+id/action_trackingFragment_to_runFragment"
+            android:id="@+id/actionTrackingFragmentToRunFragment"
             app:destination="@id/runFragment" />
     </fragment>
 </navigation>
