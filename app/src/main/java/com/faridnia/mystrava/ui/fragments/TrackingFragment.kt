@@ -27,11 +27,11 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
+    ): View {
 
         _binding = FragmentTrackingBinding.inflate(layoutInflater, container, false)
 
-        return super.onCreateView(inflater, container, savedInstanceState)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -39,13 +39,19 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
 
         binding.mapView.onCreate(savedInstanceState)
 
+        setToggleButtonClickListener()
+
+        getMap()
+    }
+
+    private fun setToggleButtonClickListener() {
         binding.btnToggleRun.setOnClickListener {
             sentCommandToService(ACTION_START_OR_RESUME_SERVICE)
         }
+    }
 
-
+    private fun getMap() {
         binding.mapView.getMapAsync {
-
             map = it
         }
     }

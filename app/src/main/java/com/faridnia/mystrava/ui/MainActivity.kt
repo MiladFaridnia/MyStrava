@@ -1,5 +1,6 @@
 package com.faridnia.mystrava.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -7,6 +8,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.faridnia.mystrava.R
 import com.faridnia.mystrava.databinding.ActivityMainBinding
+import com.faridnia.mystrava.other.Constants
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -29,11 +31,19 @@ class MainActivity : AppCompatActivity() {
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
-                R.id.settingFragment, R.id.runFragment, R.id.statisticsFragment ->
+                R.id.settingsFragment, R.id.runFragment, R.id.statisticsFragment ->
                     binding.bottomNavigationView.visibility = View.VISIBLE
+
                 else ->
                     binding.bottomNavigationView.visibility = View.GONE
             }
         }
     }
+
+    private fun navigateToTrackingFragmentIfNeeded(intent: Intent) {
+        if (intent.action == Constants.ACTION_SHOW_TRACKING_FRAGMENT) {
+            findNavController(R.id.navHostFragment).navigate(R.id.action_global_tracking_fragment)
+        }
+    }
+
 }
