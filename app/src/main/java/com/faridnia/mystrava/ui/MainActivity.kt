@@ -23,6 +23,8 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(binding.rootView)
 
+        navigateToTrackingFragmentIfNeeded(intent)
+
         setSupportActionBar(binding.toolbar)
 
         val navController = findNavController(R.id.navHostFragment)
@@ -46,4 +48,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        intent?.let {
+            navigateToTrackingFragmentIfNeeded(intent)
+        }
+    }
 }
