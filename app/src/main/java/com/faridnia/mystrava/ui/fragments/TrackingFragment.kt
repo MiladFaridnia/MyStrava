@@ -10,13 +10,16 @@ import androidx.fragment.app.viewModels
 import com.faridnia.mystrava.R
 import com.faridnia.mystrava.databinding.FragmentTrackingBinding
 import com.faridnia.mystrava.other.Constants.ACTION_START_OR_RESUME_SERVICE
+import com.faridnia.mystrava.other.NotificationUtils
 import com.faridnia.mystrava.service.TrackingService
 import com.faridnia.mystrava.ui.viewmodels.MainViewModel
 import com.google.android.gms.maps.GoogleMap
 import dagger.hilt.android.AndroidEntryPoint
+import pub.devrel.easypermissions.AppSettingsDialog
+import pub.devrel.easypermissions.EasyPermissions
 
 @AndroidEntryPoint
-class TrackingFragment : Fragment(R.layout.fragment_tracking) {
+class TrackingFragment : Fragment(R.layout.fragment_tracking), EasyPermissions.PermissionCallbacks {
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -39,6 +42,8 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
 
         binding.mapView.onCreate(savedInstanceState)
 
+        requestNotificationPermission()
+
         setToggleButtonClickListener()
 
         getMap()
@@ -48,6 +53,14 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
         binding.btnToggleRun.setOnClickListener {
             sentCommandToService(ACTION_START_OR_RESUME_SERVICE)
         }
+    }
+
+    private fun requestNotificationPermission() {
+        if (NotificationUtils.hasNotificationPermissions(requireContext())) {
+            return
+        }
+
+        NotificationUtils.requestPermission(this)
     }
 
     private fun getMap() {
@@ -62,6 +75,27 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking) {
             requireContext().startService(it)
         }
     }
+
+    override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {}
+
+    override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>) {
+        if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
+            AppSettingsDialog.Builder(this).build().show()
+        } else {
+            requestNotificationPermission()
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
+    }
+
 
     override fun onStart() {
         super.onStart()
