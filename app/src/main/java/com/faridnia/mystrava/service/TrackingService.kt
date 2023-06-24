@@ -52,17 +52,33 @@ class TrackingService : LifecycleService() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    private fun getMainActivityPendingIntent() = PendingIntent.getActivity(
-        this,
-        0,
-        Intent(
-            this,
-            MainActivity::class.java
-        ).also {
-            it.action = ACTION_SHOW_TRACKING_FRAGMENT
-        },
-        PendingIntent.FLAG_UPDATE_CURRENT
-    )
+    private fun getMainActivityPendingIntent(): PendingIntent {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            PendingIntent.getActivity(
+                this,
+                0,
+                Intent(
+                    this,
+                    MainActivity::class.java
+                ).also {
+                    it.action = ACTION_SHOW_TRACKING_FRAGMENT
+                },
+                PendingIntent.FLAG_IMMUTABLE
+            );
+        } else {
+            PendingIntent.getActivity(
+                this,
+                0,
+                Intent(
+                    this,
+                    MainActivity::class.java
+                ).also {
+                    it.action = ACTION_SHOW_TRACKING_FRAGMENT
+                },
+                PendingIntent.FLAG_UPDATE_CURRENT
+            );
+        }
+    }
 
     private fun startForegroundService() {
         val notificationManager =
