@@ -14,7 +14,6 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import com.faridnia.mystrava.R
 import com.faridnia.mystrava.other.Constants
 import com.faridnia.mystrava.other.Constants.ACTION_SHOW_TRACKING_FRAGMENT
@@ -40,7 +39,7 @@ typealias PolyLinesList = MutableList<PolyLine>
 
 class TrackingService : LifecycleService() {
 
-    var isFirstRun = true
+    private var isFirstRun = true
 
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
@@ -56,9 +55,9 @@ class TrackingService : LifecycleService() {
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
-        isTrackingLiveData.observe(this, Observer {
+        isTrackingLiveData.observe(this) {
             updateLocationTracking(it)
-        })
+        }
 
     }
 
@@ -132,6 +131,7 @@ class TrackingService : LifecycleService() {
                 }
 
                 Constants.ACTION_PAUSE_SERVICE -> {
+                    pauseService()
                     Timber.d("ACTION_PAUSE_SERVICE")
                 }
 
@@ -143,6 +143,10 @@ class TrackingService : LifecycleService() {
         }
 
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun pauseService() {
+        isTrackingLiveData.postValue(false)
     }
 
     private fun getMainActivityPendingIntent(): PendingIntent {
@@ -157,7 +161,7 @@ class TrackingService : LifecycleService() {
                     it.action = ACTION_SHOW_TRACKING_FRAGMENT
                 },
                 PendingIntent.FLAG_IMMUTABLE
-            );
+            )
         } else {
             PendingIntent.getActivity(
                 this,
@@ -169,7 +173,7 @@ class TrackingService : LifecycleService() {
                     it.action = ACTION_SHOW_TRACKING_FRAGMENT
                 },
                 PendingIntent.FLAG_UPDATE_CURRENT
-            );
+            )
         }
     }
 
