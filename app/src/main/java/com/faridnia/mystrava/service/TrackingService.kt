@@ -20,6 +20,7 @@ import com.faridnia.mystrava.R
 import com.faridnia.mystrava.other.Constants
 import com.faridnia.mystrava.other.Constants.ACTION_PAUSE_SERVICE
 import com.faridnia.mystrava.other.Constants.ACTION_START_OR_RESUME_SERVICE
+import com.faridnia.mystrava.other.Constants.ACTION_STOP_SERVICE
 import com.faridnia.mystrava.other.Constants.FASTEST_LOCATION_INTERVAL
 import com.faridnia.mystrava.other.Constants.LOCATION_UPDATE_INTERVAL
 import com.faridnia.mystrava.other.Constants.NOTIFICATION_CHANNEL_ID
@@ -48,6 +49,7 @@ typealias PolyLinesList = MutableList<PolyLine>
 class TrackingService : LifecycleService() {
 
     private var isFirstRun = true
+    private var isServiceKilled = false
 
     @Inject
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -116,23 +118,24 @@ class TrackingService : LifecycleService() {
     }
 
     private fun updateNotificationState(isTracking: Boolean) {
+        if (isServiceKilled.not()) {
+            currentNotificationBuilder.javaClass.getDeclaredField("mActions").apply {
+                isAccessible = true
+                set(currentNotificationBuilder, ArrayList<NotificationCompat.Action>())
+            }
 
-        currentNotificationBuilder.javaClass.getDeclaredField("mActions").apply {
-            isAccessible = true
-            set(currentNotificationBuilder, ArrayList<NotificationCompat.Action>())
+            currentNotificationBuilder = baseNotificationBuilder
+                .addAction(
+                    R.drawable.ic_pause_black_24dp,
+                    getActionTextTitle(isTracking),
+                    getNotificationPendingIntent(isTracking)
+                )
+
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            notificationManager.notify(NOTIFICATION_ID, currentNotificationBuilder.build())
         }
-
-        currentNotificationBuilder = baseNotificationBuilder
-            .addAction(
-                R.drawable.ic_pause_black_24dp,
-                getActionTextTitle(isTracking),
-                getNotificationPendingIntent(isTracking)
-            )
-
-        val notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        notificationManager.notify(NOTIFICATION_ID, currentNotificationBuilder.build())
     }
 
     private fun getNotificationPendingIntent(isTracking: Boolean): PendingIntent? {
@@ -193,7 +196,7 @@ class TrackingService : LifecycleService() {
         intent?.let {
             when (it.action) {
 
-                Constants.ACTION_START_OR_RESUME_SERVICE -> {
+                ACTION_START_OR_RESUME_SERVICE -> {
                     if (isFirstRun) {
                         Timber.d("ACTION_START_SERVICE")
                         startTimer()
@@ -205,19 +208,29 @@ class TrackingService : LifecycleService() {
                     }
                 }
 
-                Constants.ACTION_PAUSE_SERVICE -> {
+                ACTION_PAUSE_SERVICE -> {
                     pauseService()
                     Timber.d("ACTION_PAUSE_SERVICE")
                 }
 
 
-                Constants.ACTION_STOP_SERVICE -> {
+                ACTION_STOP_SERVICE -> {
+                    killService()
                     Timber.d("ACTION_STOP_SERVICE")
                 }
             }
         }
 
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun killService() {
+        isServiceKilled = true
+        isFirstRun = true
+        pauseService()
+        postInitialValues()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 
     private fun startTimer() {
@@ -267,12 +280,12 @@ class TrackingService : LifecycleService() {
 
 
         timeRunInSecondsLiveData.observe(this) { timeInMillis ->
-
-            val notification = currentNotificationBuilder.setContentText(
-                TrackingUtils.getFormattedStopWatchTime(timeInMillis * 1000)
-            )
-
-            notificationManager.notify(NOTIFICATION_ID, notification.build())
+            if (isServiceKilled.not()) {
+                val notification = currentNotificationBuilder.setContentText(
+                    TrackingUtils.getFormattedStopWatchTime(timeInMillis * 1000)
+                )
+                notificationManager.notify(NOTIFICATION_ID, notification.build())
+            }
         }
 
     }

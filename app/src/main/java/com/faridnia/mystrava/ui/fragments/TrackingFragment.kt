@@ -4,15 +4,22 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
+import androidx.lifecycle.Lifecycle
+import androidx.navigation.fragment.findNavController
 import com.faridnia.mystrava.R
 import com.faridnia.mystrava.databinding.FragmentTrackingBinding
 import com.faridnia.mystrava.other.Constants.ACTION_PAUSE_SERVICE
 import com.faridnia.mystrava.other.Constants.ACTION_START_OR_RESUME_SERVICE
+import com.faridnia.mystrava.other.Constants.ACTION_STOP_SERVICE
 import com.faridnia.mystrava.other.Constants.MAP_ZOOM
 import com.faridnia.mystrava.other.Constants.POLY_LINE_COLOR
 import com.faridnia.mystrava.other.Constants.POLY_LINE_WIDTH
@@ -24,12 +31,16 @@ import com.faridnia.mystrava.ui.viewmodels.MainViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 
+
 @AndroidEntryPoint
-class TrackingFragment : Fragment(R.layout.fragment_tracking), EasyPermissions.PermissionCallbacks {
+class TrackingFragment : Fragment(R.layout.fragment_tracking),
+    EasyPermissions.PermissionCallbacks,
+    MenuProvider {
 
     //private var pathPoints: PolyLinesList? = null
     private var isTracking: Boolean = false
@@ -43,11 +54,16 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking), EasyPermissions.P
 
     var map: GoogleMap? = null
 
+    private var menu: Menu? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
 
         _binding = FragmentTrackingBinding.inflate(layoutInflater, container, false)
+
+        val menuHost: MenuHost = requireActivity()
+        menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         return binding.root
     }
@@ -64,11 +80,49 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking), EasyPermissions.P
         observeTrackingServiceData()
 
         getMap()
+
     }
+
+    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.tracking_fragment_menu, menu)
+        this.menu = menu
+
+        if(curTimeInMillis > 0L) {
+            this.menu?.getItem(0)?.isVisible = true
+        }
+    }
+
+    override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+        when (menuItem.itemId) {
+            R.id.cancel_run -> {
+                showCancelRunDialog()
+            }
+        }
+        return false
+    }
+
+    private fun showCancelRunDialog() {
+        MaterialAlertDialogBuilder(requireContext(), R.style.AlertDialogTheme)
+            .setTitle("Cancel Run?")
+            .setMessage("Are you sure to cancel the run and delete all its data?")
+            .setIcon(R.drawable.ic_delete)
+            .setPositiveButton("Yes") { _, _ ->
+                stopRun()
+            }.setNegativeButton("No") { dialog, _ ->
+                dialog.cancel()
+            }.create().show()
+    }
+
+    private fun stopRun() {
+        sendCommandToService(ACTION_STOP_SERVICE)
+        findNavController().navigate(R.id.actionTrackingFragmentToRunFragment)
+    }
+
 
     private fun observeTrackingServiceData() {
         TrackingService.isTrackingLiveData.observe(viewLifecycleOwner) {
             updateTracking(it)
+
         }
 
         TrackingService.pathPointsLiveData.observe(viewLifecycleOwner) {
@@ -108,6 +162,7 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking), EasyPermissions.P
         this.isTracking = isTracking
 
         if (isTracking) {
+            menu?.getItem(0)?.isVisible = true
             binding.btnToggleRun.text = getString(R.string.stop)
             binding.btnFinishRun.visibility = View.VISIBLE
         } else {
@@ -124,9 +179,10 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking), EasyPermissions.P
 
     private fun toggleRun() {
         if (isTracking) {
-            sentCommandToService(ACTION_PAUSE_SERVICE)
+            menu?.getItem(0)?.isVisible = true
+            sendCommandToService(ACTION_PAUSE_SERVICE)
         } else {
-            sentCommandToService(ACTION_START_OR_RESUME_SERVICE)
+            sendCommandToService(ACTION_START_OR_RESUME_SERVICE)
         }
     }
 
@@ -166,7 +222,7 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking), EasyPermissions.P
         }
     }
 
-    private fun sentCommandToService(command: String) {
+    private fun sendCommandToService(command: String) {
         Intent(requireContext(), TrackingService::class.java).also {
             it.action = command
             requireContext().startService(it)
