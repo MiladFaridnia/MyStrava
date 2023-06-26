@@ -4,6 +4,9 @@ import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.NotificationManager.IMPORTANCE_LOW
+import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
 import android.location.Location
@@ -13,7 +16,10 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
+import com.faridnia.mystrava.R
 import com.faridnia.mystrava.other.Constants
+import com.faridnia.mystrava.other.Constants.ACTION_PAUSE_SERVICE
+import com.faridnia.mystrava.other.Constants.ACTION_START_OR_RESUME_SERVICE
 import com.faridnia.mystrava.other.Constants.FASTEST_LOCATION_INTERVAL
 import com.faridnia.mystrava.other.Constants.LOCATION_UPDATE_INTERVAL
 import com.faridnia.mystrava.other.Constants.NOTIFICATION_CHANNEL_ID
@@ -49,6 +55,8 @@ class TrackingService : LifecycleService() {
     @Inject
     lateinit var baseNotificationBuilder: NotificationCompat.Builder
 
+    lateinit var currentNotificationBuilder: NotificationCompat.Builder
+
 
     private var isTimerEnabled = false
     private var lapTime = 0L
@@ -56,7 +64,7 @@ class TrackingService : LifecycleService() {
     private var timeStarted = 0L
     private var lastSecondTimestamp = 0L
 
-    private val timeRunInSeconds = MutableLiveData<Long>()
+    private val timeRunInSecondsLiveData = MutableLiveData<Long>()
 
     companion object {
         val timeRunInMillisLiveData = MutableLiveData<Long>()
@@ -67,10 +75,13 @@ class TrackingService : LifecycleService() {
     override fun onCreate() {
         super.onCreate()
 
+        currentNotificationBuilder = baseNotificationBuilder
+
         postInitialValues()
 
         isTrackingLiveData.observe(this) {
             updateLocationTracking(it)
+            updateNotificationState(it)
         }
 
     }
@@ -78,7 +89,7 @@ class TrackingService : LifecycleService() {
     private fun postInitialValues() {
         isTrackingLiveData.postValue(false)
         pathPointsLiveData.postValue(mutableListOf())
-        timeRunInSeconds.postValue(0L)
+        timeRunInSecondsLiveData.postValue(0L)
         timeRunInMillisLiveData.postValue(0L)
     }
 
@@ -102,6 +113,52 @@ class TrackingService : LifecycleService() {
                 }
             }
         }
+    }
+
+    private fun updateNotificationState(isTracking: Boolean) {
+
+        currentNotificationBuilder.javaClass.getDeclaredField("mActions").apply {
+            isAccessible = true
+            set(currentNotificationBuilder, ArrayList<NotificationCompat.Action>())
+        }
+
+        currentNotificationBuilder = baseNotificationBuilder
+            .addAction(
+                R.drawable.ic_pause_black_24dp,
+                getActionTextTitle(isTracking),
+                getNotificationPendingIntent(isTracking)
+            )
+
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        notificationManager.notify(NOTIFICATION_ID, currentNotificationBuilder.build())
+    }
+
+    private fun getNotificationPendingIntent(isTracking: Boolean): PendingIntent? {
+        return if (isTracking) {
+            val pauseIntent = Intent(this, TrackingService::class.java).apply {
+                action = ACTION_PAUSE_SERVICE
+            }
+            PendingIntent.getService(this, 1, pauseIntent, getFlag())
+        } else {
+            val resumeIntent = Intent(this, TrackingService::class.java).apply {
+                action = ACTION_START_OR_RESUME_SERVICE
+            }
+            PendingIntent.getService(this, 1, resumeIntent, getFlag())
+        }
+    }
+
+    private fun getFlag(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            FLAG_IMMUTABLE
+        } else {
+            FLAG_UPDATE_CURRENT
+        }
+    }
+
+    private fun getActionTextTitle(isTracking: Boolean): String {
+        return if (isTracking) "Pause" else "Resume"
     }
 
     @SuppressLint("MissingPermission")
@@ -168,6 +225,10 @@ class TrackingService : LifecycleService() {
         isTrackingLiveData.postValue(true)
         timeStarted = System.currentTimeMillis()
         isTimerEnabled = true
+        calculateTimeAndPostSeconds()
+    }
+
+    private fun calculateTimeAndPostSeconds() {
         CoroutineScope(Dispatchers.Main).launch {
             while (isTrackingLiveData.value!!) {
                 // time difference between now and timeStarted
@@ -175,7 +236,7 @@ class TrackingService : LifecycleService() {
                 // post the new lapTime
                 timeRunInMillisLiveData.postValue(timeRun + lapTime)
                 if (timeRunInMillisLiveData.value!! >= lastSecondTimestamp + 1000L) {
-                    timeRunInSeconds.postValue(timeRunInSeconds.value!! + 1)
+                    timeRunInSecondsLiveData.postValue(timeRunInSecondsLiveData.value!! + 1)
                     lastSecondTimestamp += 1000L
                 }
                 delay(Constants.TIMER_UPDATE_INTERVAL)
@@ -204,6 +265,15 @@ class TrackingService : LifecycleService() {
 
         startForeground(NOTIFICATION_ID, baseNotificationBuilder.build())
 
+
+        timeRunInSecondsLiveData.observe(this) { timeInMillis ->
+
+            val notification = currentNotificationBuilder.setContentText(
+                TrackingUtils.getFormattedStopWatchTime(timeInMillis * 1000)
+            )
+
+            notificationManager.notify(NOTIFICATION_ID, notification.build())
+        }
 
     }
 
