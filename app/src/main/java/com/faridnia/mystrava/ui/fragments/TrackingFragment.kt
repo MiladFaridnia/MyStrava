@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import com.faridnia.mystrava.R
 import com.faridnia.mystrava.databinding.FragmentTrackingBinding
 import com.faridnia.mystrava.other.Constants.ACTION_PAUSE_SERVICE
@@ -32,6 +33,8 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking), EasyPermissions.P
 
     //private var pathPoints: PolyLinesList? = null
     private var isTracking: Boolean = false
+
+    private var curTimeInMillis = 0L
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -73,6 +76,13 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking), EasyPermissions.P
             updateLastPolyLine(it)
             moveCameraToUser(it)
         }
+
+        TrackingService.timeRunInMillisLiveData.observe(viewLifecycleOwner) {
+            curTimeInMillis = it
+            val formattedTime = TrackingUtils.getFormattedStopWatchTime(curTimeInMillis, true)
+            binding.tvTimer.text = formattedTime
+        }
+
     }
 
     private fun moveCameraToUser(mutableLists: PolyLinesList) {
@@ -98,10 +108,10 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking), EasyPermissions.P
         this.isTracking = isTracking
 
         if (isTracking) {
-            binding.btnToggleRun.text = "Stop"
+            binding.btnToggleRun.text = getString(R.string.stop)
             binding.btnFinishRun.visibility = View.VISIBLE
         } else {
-            binding.btnToggleRun.text = "Start"
+            binding.btnToggleRun.text = getString(R.string.start)
             binding.btnFinishRun.visibility = View.GONE
         }
     }

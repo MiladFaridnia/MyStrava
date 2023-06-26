@@ -4,6 +4,8 @@ import android.graphics.Color
 
 object Constants {
 
+    const val TIMER_UPDATE_INTERVAL = 50L
+
     const val POLY_LINE_COLOR = Color.RED
     const val POLY_LINE_WIDTH = 7f
     const val MAP_ZOOM = 14f

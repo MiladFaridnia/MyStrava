@@ -31,6 +31,10 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY
 import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 typealias PolyLine = MutableList<LatLng>
@@ -43,7 +47,16 @@ class TrackingService : LifecycleService() {
 
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
+    private var isTimerEnabled = false
+    private var lapTime = 0L
+    private var timeRun = 0L
+    private var timeStarted = 0L
+    private var lastSecondTimestamp = 0L
+
+    private val timeRunInSeconds = MutableLiveData<Long>()
+
     companion object {
+        val timeRunInMillisLiveData = MutableLiveData<Long>()
         val isTrackingLiveData = MutableLiveData<Boolean>()
         val pathPointsLiveData = MutableLiveData<PolyLinesList>()
     }
@@ -64,6 +77,8 @@ class TrackingService : LifecycleService() {
     private fun postInitialValues() {
         isTrackingLiveData.postValue(false)
         pathPointsLiveData.postValue(mutableListOf())
+        timeRunInSeconds.postValue(0L)
+        timeRunInMillisLiveData.postValue(0L)
     }
 
     private fun addPathPoint(location: Location?) {
@@ -123,9 +138,11 @@ class TrackingService : LifecycleService() {
                 Constants.ACTION_START_OR_RESUME_SERVICE -> {
                     if (isFirstRun) {
                         Timber.d("ACTION_START_SERVICE")
+                        startTimer()
                         startForegroundService()
                         isFirstRun = false
                     } else {
+                        startTimer()
                         Timber.d("ACTION_RESUME_SERVICE")
                     }
                 }
@@ -145,9 +162,32 @@ class TrackingService : LifecycleService() {
         return super.onStartCommand(intent, flags, startId)
     }
 
+    private fun startTimer() {
+        addEmptyPolyLine()
+        isTrackingLiveData.postValue(true)
+        timeStarted = System.currentTimeMillis()
+        isTimerEnabled = true
+        CoroutineScope(Dispatchers.Main).launch {
+            while (isTrackingLiveData.value!!) {
+                // time difference between now and timeStarted
+                lapTime = System.currentTimeMillis() - timeStarted
+                // post the new lapTime
+                timeRunInMillisLiveData.postValue(timeRun + lapTime)
+                if (timeRunInMillisLiveData.value!! >= lastSecondTimestamp + 1000L) {
+                    timeRunInSeconds.postValue(timeRunInSeconds.value!! + 1)
+                    lastSecondTimestamp += 1000L
+                }
+                delay(Constants.TIMER_UPDATE_INTERVAL)
+            }
+            timeRun += lapTime
+        }
+    }
+
     private fun pauseService() {
         isTrackingLiveData.postValue(false)
+        isTimerEnabled = false
     }
+
 
     private fun getMainActivityPendingIntent(): PendingIntent {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -179,7 +219,6 @@ class TrackingService : LifecycleService() {
 
     private fun startForegroundService() {
 
-        addEmptyPolyLine()
         isTrackingLiveData.postValue(true)
 
         val notificationManager =
@@ -198,6 +237,8 @@ class TrackingService : LifecycleService() {
             .setContentIntent(getMainActivityPendingIntent())
 
         startForeground(NOTIFICATION_ID, notificationBuilder.build())
+
+
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
