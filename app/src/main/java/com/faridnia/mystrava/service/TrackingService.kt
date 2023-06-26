@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.NotificationManager.IMPORTANCE_LOW
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.location.Location
@@ -15,14 +14,12 @@ import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
 import com.faridnia.mystrava.other.Constants
-import com.faridnia.mystrava.other.Constants.ACTION_SHOW_TRACKING_FRAGMENT
 import com.faridnia.mystrava.other.Constants.FASTEST_LOCATION_INTERVAL
 import com.faridnia.mystrava.other.Constants.LOCATION_UPDATE_INTERVAL
 import com.faridnia.mystrava.other.Constants.NOTIFICATION_CHANNEL_ID
 import com.faridnia.mystrava.other.Constants.NOTIFICATION_CHANNEL_NAME
 import com.faridnia.mystrava.other.Constants.NOTIFICATION_ID
 import com.faridnia.mystrava.other.TrackingUtils
-import com.faridnia.mystrava.ui.MainActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -192,34 +189,6 @@ class TrackingService : LifecycleService() {
         isTimerEnabled = false
     }
 
-
-    private fun getMainActivityPendingIntent(): PendingIntent {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            PendingIntent.getActivity(
-                this,
-                0,
-                Intent(
-                    this,
-                    MainActivity::class.java
-                ).also {
-                    it.action = ACTION_SHOW_TRACKING_FRAGMENT
-                },
-                PendingIntent.FLAG_IMMUTABLE
-            )
-        } else {
-            PendingIntent.getActivity(
-                this,
-                0,
-                Intent(
-                    this,
-                    MainActivity::class.java
-                ).also {
-                    it.action = ACTION_SHOW_TRACKING_FRAGMENT
-                },
-                PendingIntent.FLAG_UPDATE_CURRENT
-            )
-        }
-    }
 
     private fun startForegroundService() {
 
