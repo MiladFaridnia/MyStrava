@@ -8,6 +8,7 @@
     <string name="stop">Stop</string>
     <string name="start">Start</string>
     <string name="cancel_run">Cancel Run</string>
+    <string name="finish_run">Finish Run</string>
     <string-array name="filter_options">
         <item>Date</item>
         <item>Running Time</item>

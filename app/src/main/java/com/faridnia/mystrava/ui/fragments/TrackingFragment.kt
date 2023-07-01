@@ -2,6 +2,7 @@ package com.faridnia.mystrava.ui.fragments
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -9,6 +10,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
@@ -17,6 +19,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
 import com.faridnia.mystrava.R
 import com.faridnia.mystrava.databinding.FragmentTrackingBinding
+import com.faridnia.mystrava.db.Run
 import com.faridnia.mystrava.other.Constants.ACTION_PAUSE_SERVICE
 import com.faridnia.mystrava.other.Constants.ACTION_START_OR_RESUME_SERVICE
 import com.faridnia.mystrava.other.Constants.ACTION_STOP_SERVICE
@@ -30,11 +33,13 @@ import com.faridnia.mystrava.service.TrackingService
 import com.faridnia.mystrava.ui.viewmodels.MainViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
+import java.util.Calendar
 
 
 @AndroidEntryPoint
@@ -42,10 +47,10 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking),
     EasyPermissions.PermissionCallbacks,
     MenuProvider {
 
-    //private var pathPoints: PolyLinesList? = null
     private var isTracking: Boolean = false
-
     private var curTimeInMillis = 0L
+    private var weight = 80L
+
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -77,17 +82,87 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking),
 
         setToggleButtonClickListener()
 
+        setFinishRunClickListener()
+
         observeTrackingServiceData()
 
         getMap()
 
     }
 
+    private fun setFinishRunClickListener() {
+        binding.btnFinishRun.setOnClickListener {
+            handleZoomToEntireRun()
+            finishRun()
+        }
+    }
+
+    private fun handleZoomToEntireRun() {
+        val pathPoints = TrackingService.pathPointsLiveData.value
+
+        if (pathPoints != null && pathPoints.size > 1) {
+            val bounds = boundBuilder(pathPoints)
+
+            map?.moveCamera(
+                CameraUpdateFactory.newLatLngBounds(
+                    bounds,
+                    binding.mapView.width,
+                    binding.mapView.height,
+                    (binding.mapView.height * 0.04f).toInt()
+                )
+            )
+        }
+    }
+
+    private fun finishRun() {
+        var bitmap: Bitmap? = null
+        map?.snapshot { bitmapResult ->
+            bitmap = bitmapResult
+        }
+        var distanceInMeters = 0
+
+        val pathPoints = TrackingService.pathPointsLiveData.value
+        pathPoints?.let {
+            for (point in pathPoints) {
+                distanceInMeters += TrackingUtils.calculateDistance(point)
+            }
+            val averageSpeed = (distanceInMeters / 1000f) / (curTimeInMillis / 1000f / 60 / 60)
+            val dateTimestamp = Calendar.getInstance().timeInMillis
+            val caloriesBurned = ((distanceInMeters / 1000f) * weight).toInt()
+
+
+            val run = Run(
+                timeStamp = dateTimestamp,
+                runDurationInMillis = curTimeInMillis,
+                distanceInMeters = distanceInMeters,
+                avgSpeedInKMH = averageSpeed,
+                image = bitmap,
+                caloriesBurned = caloriesBurned
+            )
+
+            viewModel.insertRun(run)
+            stopRun()
+
+            Toast.makeText(requireContext(), "Run Saved", Toast.LENGTH_LONG).show()
+
+        }
+    }
+
+    private fun boundBuilder(pathPoints: PolyLinesList): LatLngBounds {
+        val bounds = LatLngBounds.builder()
+        for (point in pathPoints) {
+            for (pos in point) {
+                bounds.include(pos)
+            }
+        }
+        return bounds.build()
+    }
+
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menuInflater.inflate(R.menu.tracking_fragment_menu, menu)
         this.menu = menu
 
-        if(curTimeInMillis > 0L) {
+        if (curTimeInMillis > 0L) {
             this.menu?.getItem(0)?.isVisible = true
         }
     }
