@@ -25,7 +25,7 @@ object NotificationUtils {
         } else {
             EasyPermissions.requestPermissions(
                 fragment,
-                "Please Accept these permissions",
+                "Please accept these permissions",
                 Constants.REQUEST_NOTIFICATION_PERMISSION_CODE,
                 Manifest.permission.POST_NOTIFICATIONS
             )
