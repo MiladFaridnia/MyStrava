@@ -5,16 +5,24 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.faridnia.mystrava.R
+import com.faridnia.mystrava.adapter.RunAdapter
 import com.faridnia.mystrava.databinding.FragmentRunBinding
 import com.faridnia.mystrava.other.TrackingUtils
+import com.faridnia.mystrava.ui.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 
 @AndroidEntryPoint
 class RunFragment : Fragment(R.layout.fragment_run), EasyPermissions.PermissionCallbacks {
+
+    private lateinit var runAdapter: RunAdapter
+
+    private val mainViewModel: MainViewModel by viewModels()
 
     private var _binding: FragmentRunBinding? = null
 
@@ -38,6 +46,23 @@ class RunFragment : Fragment(R.layout.fragment_run), EasyPermissions.PermissionC
 
         setFabClickListener()
 
+        setupRecyclerView()
+
+        observeRuns()
+    }
+
+    private fun observeRuns() {
+        mainViewModel.runs.observe(viewLifecycleOwner) {
+            runAdapter.submitList(it)
+        }
+    }
+
+    private fun setupRecyclerView() = binding.rvRuns.apply {
+        runAdapter = RunAdapter()
+
+        adapter = runAdapter
+
+        layoutManager = LinearLayoutManager(requireContext())
     }
 
     private fun setFabClickListener() {

@@ -39,6 +39,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
+import timber.log.Timber
 import java.util.Calendar
 
 
@@ -50,7 +51,6 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking),
     private var isTracking: Boolean = false
     private var curTimeInMillis = 0L
     private var weight = 80L
-
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -78,15 +78,13 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking),
 
         binding.mapView.onCreate(savedInstanceState)
 
+        getMap()
+
         requestNotificationPermission()
 
         setToggleButtonClickListener()
 
-        setFinishRunClickListener()
-
         observeTrackingServiceData()
-
-        getMap()
 
     }
 
@@ -132,7 +130,7 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking),
 
 
             val run = Run(
-                timeStamp = dateTimestamp,
+                timestamp = dateTimestamp,
                 runDurationInMillis = curTimeInMillis,
                 distanceInMeters = distanceInMeters,
                 avgSpeedInKMH = averageSpeed,
@@ -141,6 +139,7 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking),
             )
 
             viewModel.insertRun(run)
+
             stopRun()
 
             Toast.makeText(requireContext(), "Run Saved", Toast.LENGTH_LONG).show()
@@ -272,13 +271,18 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking),
     @SuppressLint("MissingPermission")
     private fun getMap() {
         binding.mapView.getMapAsync {
+            Timber.d("map loaded")
             map = it
             if (TrackingUtils.hasLocationPermissions(requireContext())) {
                 map?.isMyLocationEnabled = true
 
             }
             map?.uiSettings?.isMyLocationButtonEnabled = true
+
             addAllPolyLines()
+
+            setFinishRunClickListener()
+
         }
     }
 

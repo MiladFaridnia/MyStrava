@@ -32,7 +32,7 @@ object TrackingUtils {
         if (isBelowAndroidQ()) {
             EasyPermissions.requestPermissions(
                 fragment,
-                "Please Accept these permissions",
+                "Please accept these permissions",
                 Constants.REQUEST_PERMISSION_CODE,
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
@@ -40,7 +40,7 @@ object TrackingUtils {
         } else {
             EasyPermissions.requestPermissions(
                 fragment,
-                "Please Accept these permissions",
+                "Please accept these permissions",
                 Constants.REQUEST_PERMISSION_CODE,
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION,

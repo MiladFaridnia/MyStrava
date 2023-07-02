@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "running_table")
 data class Run(
-    var timeStamp: Long = 0L, //when the run was
+    var timestamp: Long = 0L, //when the run was
     var runDurationInMillis: Long = 0L,
     var distanceInMeters: Int = 0,
     var avgSpeedInKMH: Float = 0F,
