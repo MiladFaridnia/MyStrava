@@ -1,9 +1,15 @@
 package com.faridnia.mystrava.di
 
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
 import androidx.room.Room
 import com.faridnia.mystrava.db.RunDatabase
 import com.faridnia.mystrava.other.Constants.DATABASE_NAME
+import com.faridnia.mystrava.other.Constants.IS_FIRST_TIME
+import com.faridnia.mystrava.other.Constants.KEY_NAME
+import com.faridnia.mystrava.other.Constants.KEY_WEIGHT
+import com.faridnia.mystrava.other.Constants.SHARED_PREF_NAME
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,5 +37,27 @@ object AppModule {
     @Singleton
     @Provides
     fun provideRunDao(db: RunDatabase) = db.getRunDao()
+
+    @Singleton
+    @Provides
+    fun provideSharedPreferences(@ApplicationContext context: Context) =
+        context.getSharedPreferences(SHARED_PREF_NAME, MODE_PRIVATE)
+
+    @Singleton
+    @Provides
+    fun provideName(sharedPref: SharedPreferences) =
+        sharedPref.getString(KEY_NAME, "") ?: ""
+
+
+    @Singleton
+    @Provides
+    fun provideWeight(sharedPref: SharedPreferences) =
+        sharedPref.getFloat(KEY_WEIGHT, 80f)
+
+    @Singleton
+    @Provides
+    fun provideIsFirstTime(sharedPref: SharedPreferences) =
+        sharedPref.getBoolean(IS_FIRST_TIME, true)
+
 
 }
