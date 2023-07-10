@@ -10,6 +10,11 @@
     <string name="cancel_run">Cancel Run</string>
     <string name="finish_run">Finish Run</string>
     <string name="sort_by">Sort by:</string>
+    <string name="your_weight">Your Weight</string>
+    <string name="your_name">Your Name</string>
+    <string name="kg">kg</string>
+    <string name="continue_to_next_page">Continue</string>
+    <string name="welcome_nplease_enter_your_name_and_weight">Welcome!\nPlease enter your name and weight.</string>
     <string-array name="filter_options">
         <item>Date</item>
         <item>Running Time</item>

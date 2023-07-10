@@ -41,6 +41,7 @@ import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import timber.log.Timber
 import java.util.Calendar
+import javax.inject.Inject
 
 
 @AndroidEntryPoint
@@ -50,7 +51,9 @@ class TrackingFragment : Fragment(R.layout.fragment_tracking),
 
     private var isTracking: Boolean = false
     private var curTimeInMillis = 0L
-    private var weight = 80L
+
+    @set:Inject
+    var weight = 80
 
     private val viewModel: MainViewModel by viewModels()
 
