@@ -16,7 +16,7 @@ object Constants {
 
     const val SHARED_PREF_NAME = "SharedPref"
     const val KEY_NAME = "KEY_NAME"
-    const val KEY_WEIGHT = "IS_FIRST_TIME"
+    const val KEY_WEIGHT = "KEY_WEIGHT"
     const val IS_FIRST_TIME = "IS_FIRST_TIME"
 
     const val ACTION_START_OR_RESUME_SERVICE = "ACTION_START_OR_RESUME_SERVICE"

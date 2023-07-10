@@ -52,7 +52,7 @@ object AppModule {
     @Singleton
     @Provides
     fun provideWeight(sharedPref: SharedPreferences) =
-        sharedPref.getFloat(KEY_WEIGHT, 80f)
+        sharedPref.getInt(KEY_WEIGHT, 80) ?: 0
 
     @Singleton
     @Provides
